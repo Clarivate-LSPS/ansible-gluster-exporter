@@ -1,0 +1,11 @@
+- hosts: all
+  become: True
+  tasks:
+    - include: 'tasks/main.yml'
+  handlers:
+    - include: 'handlers/main.yml'
+  vars_files:
+    - 'defaults/main.yml'
+
+  vars:
+    prometheus_gluster_exporter_opts: "-log.level=debug"

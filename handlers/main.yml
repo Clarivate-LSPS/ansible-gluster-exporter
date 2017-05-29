@@ -1,0 +1,12 @@
+---
+# file: handlers/main.yml
+#
+
+- name: restart gluster_exporter
+  service: name=gluster_exporter state=restarted
+
+- name: reload gluster_exporter
+  service: name=gluster_exporter state=reloaded
+
+- name: stop gluster_exporter
+  service: name=gluster_exporter state=stopped

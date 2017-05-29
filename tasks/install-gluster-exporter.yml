@@ -1,0 +1,82 @@
+---
+# file: tasks/install-glusterfs-exporter.yml
+#
+# Install Prometheus glusterfs-exporter.
+#
+# @see http://prometheus.io/docs/introduction/getting_started/
+#
+
+- block:
+    - name: set internal variables for convenience (part 1)
+      set_fact:
+        prometheus_gluster_exporter_archive_name: "gluster_exporter-{{ prometheus_gluster_exporter_version }}.{{ prometheus_gluster_exporter_platform }}-{{ prometheus_gluster_exporter_arch }}"
+        
+    - name: set internal variables for convenience (part 2)
+      set_fact:
+        prometheus_gluster_exporter_tarball_url: "https://github.com/prometheus/gluster_exporter/releases/download/v{{ prometheus_gluster_exporter_version }}/{{ prometheus_gluster_exporter_archive_name }}.tar.gz"
+
+    - name: download and untar gluster_exporter tarball
+      unarchive:
+        src: "{{ prometheus_gluster_exporter_tarball_url }}"
+        dest: "{{ prometheus_install_path }}"
+        copy: no
+
+    - name: move to correct install path
+      command: "mv {{ prometheus_install_path }}/{{ prometheus_gluster_exporter_archive_name }}/gluster_exporter {{ prometheus_install_path }}/gluster_exporter"
+  when: prometheus_gluster_exporter_version != "git"
+
+- block:
+    - name: set internal variables for convenience
+      set_fact:
+        prometheus_gluster_exporter_git_url: "https://github.com/prometheus/gluster_exporter.git"
+        prometheus_gluster_exporter_src_path: "{{ prometheus_goroot }}/src/github.com/prometheus/gluster_exporter"
+
+    - name: delete the gluster_exporter directory if it already exists
+      file: path="{{ prometheus_gluster_exporter_src_path }}" state=absent
+      when: prometheus_rebuild
+
+    - name: clone the gluster_exporter project src
+      git:
+        repo: "{{ prometheus_gluster_exporter_git_url }}"
+        dest: "{{ prometheus_gluster_exporter_src_path }}"
+        force: yes
+
+    - name: build gluster_exporter
+      command: make
+      args:
+        chdir: "{{ prometheus_gluster_exporter_src_path }}"
+        creates: gluster_exporter
+      environment:
+        GO15VENDOREXPERIMENT: 1
+        GOROOT: "{{ prometheus_goroot }}"
+        GOPATH: "{{ prometheus_gopath }}"
+        PATH: "{{ ansible_env.PATH }}:{{ prometheus_goroot }}/bin:{{ prometheus_gopath }}/bin"
+
+
+    - name: copy the built gluster_exporter to the install path
+      command: "cp {{ prometheus_gluster_exporter_src_path }}/gluster_exporter {{ prometheus_install_path }}"
+
+  when: prometheus_gluster_exporter_version == "git"
+
+
+
+- name: set permissions, owner and group
+  file: path={{ prometheus_install_path }}/gluster_exporter owner={{ prometheus_user }} group={{ prometheus_group }} mode="go-w"
+
+- name: set gluster_exporter variables
+  copy: src="../files/etc-default-gluster_exporter"  dest=/etc/default/gluster_exporter
+
+
+- debug: var=prometheus_gluster_exporter_use_systemd
+
+- name: copy INIT script to server
+  template: src="../templates/gluster_exporter.sysvinit.{{ ansible_os_family|lower }}.sh.j2"  dest="/etc/init.d/gluster_exporter"  mode="a+x"
+  when: not prometheus_gluster_exporter_use_systemd|bool
+
+- name: copy systemd config to server
+  template: src="../templates/gluster_exporter.service.j2"  dest="/lib/systemd/system/gluster_exporter.service"
+  when: prometheus_gluster_exporter_use_systemd
+
+
+- name: set INIT status
+  service: name=gluster_exporter enabled=yes state=restarted

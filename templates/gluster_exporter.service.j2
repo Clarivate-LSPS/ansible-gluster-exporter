@@ -1,0 +1,21 @@
+[Unit]
+Description=gluster_exporter - Prometheus exporter for GlusterFS metrics.
+Documentation=https://github.com/Clarivate-LSPS/ansible-gluster-exporter
+After=network.target
+
+[Service]
+Type=simple
+
+#ExecStartPre=/bin/sh -c  " mkdir -p '{{ prometheus_pid_path }}' '{{ prometheus_log_path }}' "
+#ExecStartPre=/bin/sh -c  " chown -R {{ prometheus_user }} '{{ prometheus_pid_path }}' '{{ prometheus_log_path }}' "
+#PIDFile={{ prometheus_pid_path }}/gluster_exporter.pid
+
+
+User={{ prometheus_user }}
+Group={{ prometheus_group }}
+
+{% if prometheus_gluster_exporter_opts is defined %}
+ExecStart={{ prometheus_install_path }}/gluster_exporter  {{ prometheus_gluster_exporter_opts }}
+{% else %}
+ExecStart={{ prometheus_install_path }}/gluster_exporter
+{% endif %}
