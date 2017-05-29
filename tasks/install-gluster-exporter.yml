@@ -13,7 +13,7 @@
         
     - name: set internal variables for convenience (part 2)
       set_fact:
-        prometheus_gluster_exporter_tarball_url: "https://github.com/prometheus/gluster_exporter/releases/download/v{{ prometheus_gluster_exporter_version }}/{{ prometheus_gluster_exporter_archive_name }}.tar.gz"
+        prometheus_gluster_exporter_tarball_url: "https://github.com/ofesseler/gluster_exporter/releases/download/v{{ prometheus_gluster_exporter_version }}/{{ prometheus_gluster_exporter_archive_name }}.tar.gz"
 
     - name: download and untar gluster_exporter tarball
       unarchive:
