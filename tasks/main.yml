@@ -50,3 +50,7 @@
 
 - name: install gluster-exporter
   include: install-gluster-exporter.yml
+
+- name: configure ACL
+  include: configure-acl.yml
+  when: prometheus_gluster_acl|bool

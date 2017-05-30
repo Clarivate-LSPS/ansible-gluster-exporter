@@ -13,12 +13,14 @@
 prometheus_user:   prometheus
 prometheus_group:  prometheus
 
-prometheus_gluster_exporter_version: 0.2.7
+prometheus_gluster_exporter_version: 0.2.5
 prometheus_gluster_exporter_platform: linux
 prometheus_gluster_exporter_arch: '{{ "amd64" if ansible_userspace_bits == "64" else "386" }}'
+# GlusterFS protects its socket and log from users other than root, but it can be fixed with ACL. Disable this option if you have problems with ACL and want to configure access manually
+prometheus_gluster_acl: '{{ prometheus_user != "root" }}'
 
 
-gosu_version: 1.10
+gosu_version: '1.10'
 prometheus_go_version:   1.6.2
 hashi_ui_arch: amd64
 

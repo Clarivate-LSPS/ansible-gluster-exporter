@@ -1,0 +1,12 @@
+- name: install ACL package
+  action: "{{ ansible_pkg_mgr }} name=acl state=present"
+
+- acl:
+    path: '{{ item }}'
+    entity: '{{ prometheus_user }}'
+    etype: user
+    permissions: rw
+    state: present
+  with_items:
+    - /var/run/glusterd.socket
+    - /var/log/glusterfs/cli.log
