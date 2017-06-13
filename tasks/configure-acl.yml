@@ -1,6 +1,11 @@
 - name: install ACL package
   action: "{{ ansible_pkg_mgr }} name=acl state=present"
 
+- name: ensure cli.log exists
+  shell: touch /var/log/glusterfs/cli.log
+  args:     
+    creates: /var/log/glusterfs/cli.log
+
 - acl:
     path: '{{ item }}'
     entity: '{{ prometheus_user }}'
